@@ -24,7 +24,7 @@
         {
             Guard.AgainstNull(nameof(messageType), messageType);
             MessageMetadata metadata;
-            if (messages.TryGetValue(messageType.TypeHandle, out metadata))
+            if (messages.TryGetValue(messageType.AssemblyQualifiedName, out metadata))
             {
                 return metadata;
             }
@@ -47,20 +47,21 @@
         {
             Guard.AgainstNullAndEmpty(nameof(messageTypeIdentifier), messageTypeIdentifier);
 
-            var messageType = Type.GetType(messageTypeIdentifier, false);
+            //var messageType = Type.GetType(messageTypeIdentifier, false);
 
-            if (messageType == null)
-            {
-                Logger.DebugFormat("Message type: '{0}' could not be determined by a 'Type.GetType', scanning known messages for a match", messageTypeIdentifier);
-                return messages.Values.FirstOrDefault(m => m.MessageType.FullName == messageTypeIdentifier);
-            }
+            //if (messageType == null)
+            //{
+            //    Logger.DebugFormat("Message type: '{0}' could not be determined by a 'Type.GetType', scanning known messages for a match", messageTypeIdentifier);
+            //    return messages.Values.FirstOrDefault(m => m.MessageType.FullName == messageTypeIdentifier);
+            //}
+
             MessageMetadata metadata;
-            if (messages.TryGetValue(messageType.TypeHandle, out metadata))
+            if (messages.TryGetValue(messageTypeIdentifier, out metadata))
             {
                 return metadata;
             }
 
-            Logger.WarnFormat("Message header '{0}' was mapped to type '{1}' but that type was not found in the message registry, ensure the same message registration conventions are used in all endpoints, especially if using unobtrusive mode. ", messageType, messageType.FullName);
+            Logger.Warn("Message header '{0}' was mapped to type '{1}' but that type was not found in the message registry, ensure the same message registration conventions are used in all endpoints, especially if using unobtrusive mode. ");
             return null;
         }
 
@@ -92,7 +93,7 @@
                 messageType
             }.Concat(parentMessages).ToArray());
 
-            messages[messageType.TypeHandle] = metadata;
+            messages[messageType.AssemblyQualifiedName] = metadata;
 
             return metadata;
         }
@@ -133,7 +134,7 @@
         }
 
         Conventions conventions;
-        Dictionary<RuntimeTypeHandle, MessageMetadata> messages = new Dictionary<RuntimeTypeHandle, MessageMetadata>();
+        Dictionary<string, MessageMetadata> messages = new Dictionary<string, MessageMetadata>();
 
         static ILog Logger = LogManager.GetLogger<MessageMetadataRegistry>();
     }

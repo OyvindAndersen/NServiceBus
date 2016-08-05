@@ -3,15 +3,17 @@ namespace NServiceBus.Routing
     /// <summary>
     /// Represents the priority of a route. Routes with bigger priority (which means smaller numeric value) override these with smaller priority (larger numeric value).
     /// </summary>
-    public class RoutePriority
+    public struct RoutePriority
     {
         int priorityValue;
 
         /// <summary>
-        /// Creates new instance.
+        /// Crates a new instance of priority.
         /// </summary>
+        /// <param name="priorityValue">Numeric value of priority. The lower the number the higher the priority. Must be non-negative.</param>
         public RoutePriority(int priorityValue)
         {
+            Guard.AgainstNegative(nameof(priorityValue), priorityValue);
             this.priorityValue = priorityValue;
         }
 

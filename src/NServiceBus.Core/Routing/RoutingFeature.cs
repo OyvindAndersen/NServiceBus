@@ -46,10 +46,8 @@
                 ImportMessageEndpointMappings(knownMessageTypes, unicastBusConfig.MessageEndpointMappings, transportInfrastructure, publishers, unicastRoutingTable);
             }
 
-            foreach (var registration in configuredUnicastRoutes)
-            {
-                unicastRoutingTable.AddOrReplaceRoutes("EndpointConfiguration", registration(knownMessageTypes).ToList());
-            }
+            var allRouteRegistration = configuredUnicastRoutes.SelectMany(x => x(knownMessageTypes)).ToList();
+            unicastRoutingTable.AddOrReplaceRoutes("EndpointConfiguration", allRouteRegistration);
 
             foreach (var registration in configuredPublishers)
             {

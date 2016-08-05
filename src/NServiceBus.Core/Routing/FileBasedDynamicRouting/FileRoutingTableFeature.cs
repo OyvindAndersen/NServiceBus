@@ -29,9 +29,8 @@ namespace NServiceBus.Features
             var checkInterval = context.Settings.Get<TimeSpan>(CheckIntervalSettingsKey);
             var endpointInstances = context.Settings.Get<EndpointInstances>();
 
-            var fileRoutingTable = new FileRoutingTable(filePath, checkInterval, new AsyncTimer(), new RoutingFileAccess());
+            var fileRoutingTable = new FileRoutingTable(filePath, checkInterval, new AsyncTimer(), new RoutingFileAccess(), endpointInstances);
             fileRoutingTable.ReloadData();
-            endpointInstances.AddDynamic(fileRoutingTable.FindInstances);
             context.RegisterStartupTask(fileRoutingTable);
         }
 

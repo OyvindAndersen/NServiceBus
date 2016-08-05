@@ -1,10 +1,8 @@
 ﻿namespace NServiceBus.Core.Tests.Routing
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Threading.Tasks;
     using MessageNamespaceA;
     using MessageNamespaceB;
     using NServiceBus.Features;
@@ -46,14 +44,17 @@
         }
 
         [Test]
-        public async Task WhenRoutingMessageTypeToEndpoint_ShouldConfigureMessageTypeInRoutingTable()
+        public void WhenRoutingMessageTypeToEndpoint_ShouldConfigureMessageTypeInRoutingTable()
         {
             var routingSettings = new RoutingSettings(new SettingsHolder());
             routingSettings.RouteToEndpoint(typeof(SomeMessageType), "destination");
 
             var routingTable = ApplyConfiguredRoutes(routingSettings);
             var route = routingTable.GetRouteFor(typeof(SomeMessageType));
-            var routingTargets = await RetrieveRoutingTargets(route);
+            var routingTargets = route.Resolve(e => new[]
+            {
+                new EndpointInstance(e)
+            });
 
             Assert.That(route, Is.Not.Null);
             Assert.That(routingTargets.Single().Endpoint, Is.EqualTo("destination"));
@@ -123,14 +124,6 @@
                 routingTable.AddOrReplaceRoutes(Guid.NewGuid(), entries.ToList());
             }
             return routingTable;
-        }
-
-        static Task<IEnumerable<UnicastRoutingTarget>> RetrieveRoutingTargets(IUnicastRoute result)
-        {
-            return result.Resolve(e => Task.FromResult<IEnumerable<EndpointInstance>>(new[]
-            {
-                new EndpointInstance(e)
-            }));
         }
 
         string expectedExceptionMessageForWrongEndpointName = "A logical endpoint name should not contain '@', but received 'EndpointName@MyHost'. To specify an endpoint's address, use the instance mapping file for the MSMQ transport, or refer to the routing documentation.";

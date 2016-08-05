@@ -3,8 +3,6 @@ namespace NServiceBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
-    using Extensibility;
     using Routing;
 
     class UnicastSendRouter : IUnicastSendRouter
@@ -16,7 +14,7 @@ namespace NServiceBus
             this.transportAddressTranslation = transportAddressTranslation;
         }
 
-        public async Task<IEnumerable<UnicastRoutingStrategy>> Route(Type messageType, IDistributionPolicy distributionPolicy, ContextBag contextBag)
+        public IEnumerable<UnicastRoutingStrategy> Route(Type messageType, IDistributionPolicy distributionPolicy)
         {
             var route = unicastRoutingTable.GetRouteFor(messageType);
             if (route == null)

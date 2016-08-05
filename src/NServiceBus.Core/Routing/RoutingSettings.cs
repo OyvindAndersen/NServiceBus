@@ -29,7 +29,10 @@
         {
             ThrowOnAddress(destination);
 
-            Settings.GetOrCreate<UnicastRoutingTable>().AddOrReplaceRoutes(Guid.NewGuid(), new List<RouteTableEntry> {new RouteTableEntry(messageType, UnicastRoute.CreateFromEndpointName(destination), RoutePriority.SpecificType) });
+            Settings.GetOrCreate<ConfiguredUnicastRoutes>().Add(knownMessageTypes => new List<RouteTableEntry>
+            {
+                new RouteTableEntry(messageType, UnicastRoute.CreateFromEndpointName(destination),  RoutePriority.SpecificType)
+            });
         }
 
         /// <summary>

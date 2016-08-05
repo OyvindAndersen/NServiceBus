@@ -153,6 +153,7 @@
     <Compile Include="Routing\IDistributionPolicy.cs" />
     <Compile Include="Routing\IUnicastSendRouter.cs" />
     <Compile Include="Routing\MessageDrivenSubscriptions\IMessageDrivenSubscriptionTransport.cs" />
+    <Compile Include="Routing\MessageDrivenSubscriptions\PublisherTableEntry.cs" />
     <Compile Include="Routing\RoutePriority.cs" />
     <Compile Include="Routing\RouteTableEntry.cs" />
     <Compile Include="Routing\RoutingFeatureSettingsExtensions.cs" />

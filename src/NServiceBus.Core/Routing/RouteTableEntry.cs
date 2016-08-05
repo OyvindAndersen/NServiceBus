@@ -25,9 +25,9 @@ namespace NServiceBus.Routing
         /// </summary>
         public RouteTableEntry(Type messageType, IUnicastRoute route, RoutePriority priority)
         {
-            this.MessageType = messageType;
-            this.Route = route;
-            this.Priority = priority;
+            MessageType = messageType;
+            Route = route;
+            Priority = priority;
         }
     }
 }

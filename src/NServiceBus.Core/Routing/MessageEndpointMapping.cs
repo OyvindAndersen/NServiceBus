@@ -5,11 +5,12 @@ namespace NServiceBus.Config
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using Routing;
 
     /// <summary>
     /// A configuration element representing which message types map to which endpoint.
     /// </summary>
-    public class MessageEndpointMapping : ConfigurationElement, IComparable<MessageEndpointMapping>
+    public partial class MessageEndpointMapping : ConfigurationElement, IComparable<MessageEndpointMapping>
     {
         /// <summary>
         /// A string defining the message assembly, or single message type.
@@ -114,15 +115,20 @@ namespace NServiceBus.Config
         /// <summary>
         /// Uses the configuration properties to configure the endpoint mapping.
         /// </summary>
-        public void Configure(Action<Type, string> mapTypeToEndpoint)
+        public void Configure(Type[] knownMessageTypes, Action<Type, string, RoutePriority> callbackAction)
         {
-            Guard.AgainstNull(nameof(mapTypeToEndpoint), mapTypeToEndpoint);
             if (!string.IsNullOrWhiteSpace(Messages))
             {
-                ConfigureEndpointMappingUsingMessagesProperty(mapTypeToEndpoint);
-                return;
+                ConfigureEndpointMappingUsingMessagesProperty(knownMessageTypes, callbackAction);
             }
+            else
+            {
+                ConfigureEndpointMappingUsingAssemblyNameProperty(knownMessageTypes, callbackAction);
+            }
+        }
 
+        void ConfigureEndpointMappingUsingAssemblyNameProperty(Type[] knownMessageTypes, Action<Type, string, RoutePriority> callbackAction)
+        {
             var address = Endpoint;
             var assemblyName = AssemblyName;
             var ns = Namespace;
@@ -137,18 +143,10 @@ namespace NServiceBus.Config
 
             if (!string.IsNullOrWhiteSpace(typeFullName))
             {
+                Type messageType;
                 try
                 {
-                    var t = a.GetType(typeFullName, false);
-
-                    if (t == null)
-                    {
-                        throw new ArgumentException($"Could not process message endpoint mapping. Cannot find the type '{typeFullName}' in the assembly '{assemblyName}'. Ensure that you are using the full name for the type.");
-                    }
-
-                    mapTypeToEndpoint(t, address);
-
-                    return;
+                    messageType = a.GetType(typeFullName, false);
                 }
                 catch (BadImageFormatException ex)
                 {
@@ -158,34 +156,35 @@ namespace NServiceBus.Config
                 {
                     throw new ArgumentException($"Could not process message endpoint mapping. Could not load the assembly or one of its dependencies for type '{typeFullName}' in the assembly '{assemblyName}'", ex);
                 }
+                if (messageType == null)
+                {
+                    throw new ArgumentException($"Could not process message endpoint mapping. Cannot find the type '{typeFullName}' in the assembly '{assemblyName}'. Ensure that you are using the full name for the type.");
+                }
+                callbackAction(messageType, address, RoutePriority.SpecificType);
+                return;
             }
 
             var messageTypes = a.GetTypes().AsQueryable();
-
+            var priority = RoutePriority.SpecificAssembly;
             if (!string.IsNullOrEmpty(ns))
             {
                 messageTypes = messageTypes.Where(t => !string.IsNullOrWhiteSpace(t.Namespace) && t.Namespace.Equals(ns, StringComparison.InvariantCultureIgnoreCase));
+                priority = RoutePriority.SpecificNamespace;
             }
-
-            foreach (var t in messageTypes)
+            foreach (var t in messageTypes.Intersect(knownMessageTypes))
             {
-                mapTypeToEndpoint(t, address);
+                callbackAction(t, address, priority);
             }
         }
 
-        void ConfigureEndpointMappingUsingMessagesProperty(Action<Type, string> mapTypeToEndpoint)
+        void ConfigureEndpointMappingUsingMessagesProperty(Type[] knownMessageTypes, Action<Type, string, RoutePriority> callbackAction)
         {
             var address = Endpoint;
             var messages = Messages;
-
+            Type messageType;
             try
             {
-                var messageType = Type.GetType(messages, false);
-                if (messageType != null)
-                {
-                    mapTypeToEndpoint(messageType, address);
-                    return;
-                }
+                messageType = Type.GetType(messages, false);
             }
             catch (BadImageFormatException ex)
             {
@@ -196,14 +195,20 @@ namespace NServiceBus.Config
                 throw new ArgumentException(string.Format("Could not process message endpoint mapping. Could not load the assembly or one of its dependencies for type: " + messages), ex);
             }
 
+            if (messageType != null)
+            {
+                callbackAction(messageType, address, RoutePriority.SpecificAssembly);
+                return;
+            }
+
             var messagesAssembly = GetMessageAssembly(messages);
 
-            foreach (var t in messagesAssembly.GetTypes())
+            foreach (var t in messagesAssembly.GetTypes().Intersect(knownMessageTypes))
             {
-                mapTypeToEndpoint(t, address);
+                callbackAction(t, address, RoutePriority.SpecificAssembly);
             }
         }
-
+        
         static Assembly GetMessageAssembly(string assemblyName)
         {
             try

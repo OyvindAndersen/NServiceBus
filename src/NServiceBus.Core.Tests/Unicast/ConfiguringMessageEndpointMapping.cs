@@ -14,6 +14,7 @@ namespace NServiceBus.Unicast.Tests
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using Messages;
     using Messages.ANamespace;
     using Messages.ANamespace.ASubNamespace;
@@ -30,7 +31,7 @@ namespace NServiceBus.Unicast.Tests
 
             setupMapping(mapping);
 
-            mapping.Configure((t, a) => mappings[t] = a);
+            mapping.Configure(Assembly.GetExecutingAssembly().GetTypes(), (t, a, p) => mappings[t] = a);
 
             return mappings;
         }

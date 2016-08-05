@@ -2380,6 +2380,20 @@ namespace NServiceBus.Features
     }
 }
 
+namespace NServiceBus.Config
+{
+    public partial class MessageEndpointMapping
+    {
+        [ObsoleteEx(
+            RemoveInVersion = "7.0",
+            TreatAsErrorFromVersion = "6.0",
+            ReplacementTypeOrMember = "Configure(Type[] knownMessageTypes, Action<Type, string, RoutePriority> callbackAction)")]
+        public void Configure(System.Action<System.Type, string> mapTypeToEndpoint)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+}
 
 
 

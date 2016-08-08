@@ -94,7 +94,7 @@ namespace NServiceBus
                 return;
             }
 
-            Logger.DebugFormat("Polling for timeouts at {0}.", currentTimeProvider());
+            Logger.DebugFormat("Polling for timeouts at {0}.", currentTimeProvider().ToLocalTime());
             var timeoutChunk = await timeoutsFetcher.GetNextChunk(startSlice).ConfigureAwait(false);
 
             foreach (var timeoutData in timeoutChunk.DueTimeouts)
